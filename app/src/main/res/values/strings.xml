@@ -1,0 +1,18 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">MediaPlayer</string>
+    <string name="fast_forward">Fast Forward</string>
+    <string name="next">Next</string>
+    <string name="pause">Pause</string>
+    <string name="play">Play</string>
+    <string name="previous">Previous</string>
+    <string name="rewind">Rewind</string>
+    <string name="unlock">Unlock</string>
+    <string name="scaling">Scaling</string>
+    <string name="back">Back</string>
+    <string name="more">More</string>
+    <string name="permission">Media Player needs permission to retrieve the videos from the mobile \n<b><font color='@android:color/holo_orange_light'>Press here to request permission</font></b> </string>
+    <string name="get_video" tools:ignore="ExtraTranslation">Oops!! Seems like no video available. \nDownload and try again</string>
+    <string name="checking">Checking…</string>
+    <string name="refresh">Refresh</string>
+    <string name="picture_in_picture">Picture in picture</string>
+</resources>

@@ -3,10 +3,12 @@ package com.example.musicplayer.utils
 import android.app.Activity
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowInsets
 import android.view.WindowManager
+import com.google.gson.Gson
 
 fun showViews(vararg view: View) = view.map {
     it.show()
@@ -18,6 +20,10 @@ fun View.show() {
 
 fun View.gone() {
     this.visibility = View.GONE
+}
+
+fun View.hide() {
+    this.visibility = View.INVISIBLE
 }
 
 fun goneViews(vararg view: View) = view.map {
@@ -39,5 +45,13 @@ fun Activity.setFullScreen() {
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
+    }
+}
+
+fun prettyPrint(data: Any?, tag: String = "kanaku") {
+    data?.let {
+        Log.d(tag, Gson().toJson(it))
+    } ?: run {
+        Log.d(tag, "null")
     }
 }

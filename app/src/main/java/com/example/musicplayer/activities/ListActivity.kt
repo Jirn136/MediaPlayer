@@ -35,6 +35,8 @@ class ListActivity : AppCompatActivity() {
     @Inject
     lateinit var mediaPreferences: MediaPreferences
 
+    lateinit var videoAdapter: VideoListAdapter
+
     private val viewModel: StorageViewModel by viewModels()
     private val manifestPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
         Manifest.permission.READ_MEDIA_VIDEO
@@ -42,11 +44,16 @@ class ListActivity : AppCompatActivity() {
 
     private var fromRefresh: Boolean = false
 
+    companion object {
+        var videoList: ArrayList<VideoDetails> = arrayListOf()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         initObserver()
+        initRecyclerView()
         binding.toolbar.ivRefresh.setOnClickListener {
             fromRefresh = true
             verifyReadPermission()
@@ -120,18 +127,18 @@ class ListActivity : AppCompatActivity() {
         }
 
 
-    private fun initRecyclerView(videoList: ArrayList<VideoDetails>) = binding.rvVideoList.apply {
+    private fun initRecyclerView() = binding.rvVideoList.apply {
         show()
         binding.tvPermission.gone()
         layoutManager = LinearLayoutManager(this@ListActivity)
-        val videoAdapter = VideoListAdapter(videoList) { details ->
+        videoAdapter = VideoListAdapter { details, position ->
             startActivity(Intent(this@ListActivity, PlayerActivity::class.java).apply {
                 details.apply {
                     putExtra(Constants.URI, uri.toString())
                     putExtra(Constants.TITLE, title)
+                    putExtra(Constants.POSITION, position)
                 }
             })
-            Log.i("Adapter", "initRecyclerView: ${Gson().toJson(details)}")
         }
         adapter = videoAdapter
     }
@@ -140,8 +147,9 @@ class ListActivity : AppCompatActivity() {
     private fun initObserver() {
         viewModel.videoDetails.observe(this) {
             if (it.isNotEmpty()) {
+                videoList.addAll(it)
                 Log.i("Observer", "onCreate: ${Gson().toJson(it)}")
-                initRecyclerView(it)
+                videoAdapter.submitList(it)
             } else {
                 binding.tvPermission.apply {
                     show()

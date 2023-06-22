@@ -15,4 +15,5 @@
     <string name="checking">Checking…</string>
     <string name="refresh">Refresh</string>
     <string name="picture_in_picture">Picture in picture</string>
+    <string name="lock">Lock</string>
 </resources>

@@ -7,17 +7,17 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/black"
         app:layout_constraintLeft_toLeftOf="parent"
-        android:background="@android:color/holo_orange_light"
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.Toolbar
             android:layout_width="match_parent"
             android:layout_height="50dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:title="@string/app_name"
             app:titleTextAppearance="@style/ActionBar.nameText">
 
@@ -25,12 +25,12 @@
 
 
         <ImageView
-            android:id="@+id/iv_refresh"
+            android:id="@+id/iv_link"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="20dp"
-            android:src="@drawable/ic_refresh"
-            android:visibility="gone"
+            android:src="@drawable/ic_web"
+            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

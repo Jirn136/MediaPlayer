@@ -1,4 +1,4 @@
-package com.example.musicplayer.adapter
+package com.example.musicplayer.videoList.adapter
 
 import android.graphics.Bitmap
 import android.view.LayoutInflater
@@ -8,9 +8,10 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.databinding.ItemViewVideoListBinding
 import com.example.musicplayer.model.VideoDetails
+import com.example.musicplayer.utils.getFormattedDurationTime
 
 class VideoListAdapter(
-    val clickListener: (details: VideoDetails,position:Int) -> Unit,
+    val clickListener: (details: VideoDetails, position: Int) -> Unit,
 ) : ListAdapter<VideoDetails, VideoListAdapter.VideoListViewHolder>(DiffUtilCallBack()) {
     inner class VideoListViewHolder(private val binding: ItemViewVideoListBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -21,8 +22,9 @@ class VideoListAdapter(
                     image?.let {
                         imgThumbnail.setImageBitmap(Bitmap.createBitmap(it))
                     }
+                    txtDuration.text = getFormattedDurationTime(duration.toLong())
                     binding.root.setOnClickListener {
-                        clickListener(this,position)
+                        clickListener(this, position)
                     }
                 }
             }

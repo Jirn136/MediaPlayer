@@ -1,4 +1,4 @@
-package com.example.musicplayer.repository
+package com.example.musicplayer.videoList.repository
 
 import com.example.musicplayer.model.VideoDetails
 

@@ -16,4 +16,12 @@
     <string name="refresh">Refresh</string>
     <string name="picture_in_picture">Picture in picture</string>
     <string name="lock">Lock</string>
+    <string name="playback_speed">Playback speed</string>
+
+    <string name="uri">uri</string>
+    <string name="title">title</string>
+    <string name="position">position</string>
+    <string name="exit_pip">Exit PIP</string>
+    <string name="paste_or_enter_link_here">Paste or enter link here</string>
+    <string name="islink">isLink</string>
 </resources>

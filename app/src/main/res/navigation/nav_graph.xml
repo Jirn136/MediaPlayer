@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/listFragment">
+
+    <fragment
+        android:id="@+id/listFragment"
+        android:name="com.example.musicplayer.videoList.VideoListFragment"
+        android:label="ListFragment"
+        tools:layout="@layout/fragment_video_list">
+        <action
+            android:id="@+id/list_to_player"
+            app:destination="@id/playerFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/playerFragment"
+        android:name="com.example.musicplayer.player.PlayerFragment"
+        android:label="PlayerFragment"
+        tools:layout="@layout/fragment_player">
+
+        <argument
+            android:name="@string/uri"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="@string/title"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="@string/position"
+            android:defaultValue="0"
+            app:argType="integer" />
+        <argument
+            android:name="@string/islink"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </fragment>
+</navigation>

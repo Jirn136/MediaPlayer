@@ -4,6 +4,7 @@ plugins {
     id 'kotlin-kapt'
     id 'com.google.dagger.hilt.android'
     id 'kotlin-parcelize'
+    id 'androidx.navigation.safeargs.kotlin'
 
 }
 
@@ -60,25 +61,33 @@ dependencies {
     def activity_version = "1.7.2"
     implementation "androidx.activity:activity-ktx:$activity_version"
 
-
-    def exoPlayer_version = "2.18.7"
-    implementation "com.google.android.exoplayer:exoplayer:$exoPlayer_version"
-    implementation "com.google.android.exoplayer:exoplayer-core:$exoPlayer_version"
-    implementation "com.google.android.exoplayer:exoplayer-dash:$exoPlayer_version"
-    implementation "com.google.android.exoplayer:exoplayer-ui:$exoPlayer_version"
-    implementation "com.google.android.exoplayer:extension-mediasession:$exoPlayer_version"
-
     def lifecycle_version = "2.6.1"
     // ViewModel
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     // LiveData
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
 
-    implementation "com.google.dagger:hilt-android:2.44"
-    kapt "com.google.dagger:hilt-compiler:2.44"
+    def nav_version = "2.6.0"
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+
+    def hilt_version = "2.44.2"
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
     implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'androidx.multidex:multidex:2.0.1'
+
+    def media3_version = "1.1.0"
+    implementation "androidx.media3:media3-exoplayer:$media3_version"
+    implementation "androidx.media3:media3-ui:$media3_version"
+    implementation "androidx.media3:media3-session:$media3_version"
+
+    def swipe_version = "1.1.0"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:$swipe_version"
+
+    def jsoup_version = "1.15.1"
+    implementation "org.jsoup:jsoup:$jsoup_version"
 
 
 }

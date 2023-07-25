@@ -35,9 +35,11 @@ import com.example.musicplayer.utils.gone
 import com.example.musicplayer.utils.goneViews
 import com.example.musicplayer.utils.hide
 import com.example.musicplayer.utils.prettyPrint
+import com.example.musicplayer.utils.setFullScreen
 import com.example.musicplayer.utils.show
 import com.example.musicplayer.utils.toToast
 import java.io.File
+import java.util.UUID
 
 class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     override fun inflateBinding(
@@ -262,8 +264,9 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     private fun prepareExoplayer() {
         if (position == 0) customControlsBinding.ivPrevious.isEnabled = false
-        else if (position == ControllerActivity.videoList.size - 1) customControlsBinding.ivNext.isEnabled =
-            false
+        else if (position == ControllerActivity.videoList.size - 1)
+            customControlsBinding.ivNext.isEnabled = false
+
         binding.apply {
             val uri = Uri.parse(ControllerActivity.videoList[position].path)
 
@@ -271,6 +274,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
                 .setSeekBackIncrementMs(Constants.SKIP_DURATION)
                 .setSeekForwardIncrementMs(Constants.SKIP_DURATION)
                 .build()
+            exoplayer.clearMediaItems()
 
             repeat(ControllerActivity.videoList.size) {
                 File(ControllerActivity.videoList[it].toString())
@@ -301,7 +305,8 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
                 play()
             }
 
-            mediaSession = MediaSession.Builder(requireContext(), exoplayer).build()
+            mediaSession = MediaSession.Builder(requireContext(), exoplayer)
+                .setId(UUID.randomUUID().toString()).build()
 
             playerListeners()
         }

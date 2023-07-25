@@ -28,6 +28,7 @@ import com.example.musicplayer.utils.gone
 import com.example.musicplayer.utils.isNetConnected
 import com.example.musicplayer.utils.prettyPrint
 import com.example.musicplayer.utils.show
+import com.example.musicplayer.utils.showViews
 import com.example.musicplayer.utils.toToast
 import com.example.musicplayer.videoList.adapter.VideoListAdapter
 import com.example.musicplayer.videoList.viewmodel.StorageViewModel
@@ -125,9 +126,12 @@ class VideoListFragment : BaseFragment<FragmentVideoListBinding>() {
                 if (it.isNotEmpty()) {
                     "videoList: ${it.size}".prettyPrint()
                     tvPermission.gone()
-                    rvVideoList.show()
+                    showViews(rvVideoList, swipeRefreshLayout)
                     videoAdapter.submitList(it)
-                    ControllerActivity.videoList.addAll(it)
+                    ControllerActivity.videoList.apply {
+                        clear()
+                        addAll(it)
+                    }
                 } else {
                     tvPermission.apply {
                         text = getString(R.string.get_video)
@@ -162,6 +166,7 @@ class VideoListFragment : BaseFragment<FragmentVideoListBinding>() {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             binding.tvPermission.apply {
+                binding.swipeRefreshLayout.gone()
                 show()
                 setOnClickListener {
                     if (!mediaPreferences.getBoolean(Constants.PERMISSION_ASKED_AND_DENIED)

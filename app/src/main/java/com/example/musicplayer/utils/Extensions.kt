@@ -6,9 +6,7 @@ import android.net.ConnectivityManager
 import android.os.Build
 import android.util.Log
 import android.view.View
-import android.view.Window
-import android.view.WindowInsets
-import android.view.WindowManager
+import android.view.WindowInsetsController
 import com.google.gson.Gson
 import java.util.concurrent.TimeUnit
 
@@ -40,13 +38,22 @@ fun String.toToast(context: Context) = android.widget.Toast.makeText(
 @Suppress("DEPRECATION")
 fun Activity.setFullScreen() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        this.window.insetsController?.hide(WindowInsets.Type.statusBars())
+        window.insetsController?.apply {
+            hide(
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            )
+            systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
     } else {
-        this.window.requestFeature(Window.FEATURE_NO_TITLE)
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
+        window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                )
     }
 }
 

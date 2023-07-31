@@ -23,9 +23,7 @@ class ControllerActivity : BaseActivity<ActivityControllerBinding>() {
         navController = navHostFragment.navController
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            if (destination.id == R.id.playerFragment) {
-                setFullScreen()
-            }
+            if (destination.id == R.id.playerFragment) setFullScreen()
         }
     }
 

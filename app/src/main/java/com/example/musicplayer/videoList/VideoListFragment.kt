@@ -100,9 +100,7 @@ class VideoListFragment : BaseFragment<FragmentVideoListBinding>() {
             .setPositiveButton("Ok") { dialog, _ ->
                 if (linkText.text.trim().isEmpty())
                     "Enter valid link".toToast(requireContext())
-                else {
-                    linkText.text.toString().toToast(requireContext())
-
+                else
                     findNavController().navigate(
                         VideoListFragmentDirections.listToPlayer(
                             linkText.text.toString(),
@@ -111,7 +109,6 @@ class VideoListFragment : BaseFragment<FragmentVideoListBinding>() {
                         )
                     )
                     dialog.dismiss()
-                }
             }
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()

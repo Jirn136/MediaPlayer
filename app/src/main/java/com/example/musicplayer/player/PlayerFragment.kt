@@ -20,9 +20,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ConcatenatingMediaSource2
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.session.MediaSession
 import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.media3.ui.PlayerView.ControllerVisibilityListener
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.musicplayer.R
@@ -35,11 +33,9 @@ import com.example.musicplayer.utils.gone
 import com.example.musicplayer.utils.goneViews
 import com.example.musicplayer.utils.hide
 import com.example.musicplayer.utils.prettyPrint
-import com.example.musicplayer.utils.setFullScreen
 import com.example.musicplayer.utils.show
 import com.example.musicplayer.utils.toToast
 import java.io.File
-import java.util.UUID
 
 class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     override fun inflateBinding(
@@ -50,7 +46,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     private lateinit var customControlsBinding: CustomControlsBinding
     private lateinit var exoplayer: ExoPlayer
     private lateinit var concatenatingMediaSource: ConcatenatingMediaSource2
-    private lateinit var mediaSession: MediaSession
     private lateinit var mediaSource: MediaSource
 
     private lateinit var uri: Uri
@@ -81,16 +76,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     private fun handleControls() {
         customControlsBinding.apply {
-            if (isLink) goneViews(
-                ivPlaybackSpeed,
-                ivPrevious,
-                ivNext,
-                ivLock,
-                ivUnlock,
-                ivScaling,
-                ivSeekForward,
-                ivRewind
-            )
+            if (isLink) goneViews(ivPrevious, ivNext, ivLock, ivUnlock, ivScaling)
             txtTitle.text = title
             if (ControllerActivity.videoList.size <= 1) {
                 ivPrevious.isEnabled = false
@@ -163,7 +149,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(enabled = true) {
             override fun handleOnBackPressed() {
                 exoplayer.stop()
-                mediaSession.release()
                 exoplayer.release()
 
                 onBackPressedDispatcher.addCallback(this)
@@ -223,31 +208,30 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     private fun finish() = findNavController().popBackStack()
 
     private fun retrieveWidthAndHeightAttributes(): Pair<Int, Int> {
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(requireContext(), uri)
-        val videoWidth =
-            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toInt()
-        val videoHeight =
-            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toInt()
-        "retrieveWidthAndHeightAttributes: width $videoWidth height $videoHeight".prettyPrint()
-        return Pair(videoWidth ?: 16, videoHeight ?: 9)
+        return if (!isLink) {
+            val retriever = MediaMetadataRetriever()
+            retriever.setDataSource(requireContext(), uri)
+            val videoWidth =
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toInt()
+            val videoHeight =
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toInt()
+            "retrieveWidthAndHeightAttributes: width $videoWidth height $videoHeight".prettyPrint()
+            Pair(videoWidth ?: 16, videoHeight ?: 9)
+        } else Pair(16, 9)
     }
 
     private fun enterPIPMode() {
-        val aspectRatio =
-            Rational(
-                retrieveWidthAndHeightAttributes().first,
-                retrieveWidthAndHeightAttributes().second
-            )
+        val aspectRatio = Rational(
+            retrieveWidthAndHeightAttributes().first, retrieveWidthAndHeightAttributes().second
+        )
         val visibleRect = Rect()
         binding.exoplayerView.getGlobalVisibleRect(visibleRect)
         requireActivity().enterPictureInPictureMode(
             PictureInPictureParams.Builder().apply {
                 setAspectRatio(aspectRatio)
                 setSourceRectHint(visibleRect)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    setAutoEnterEnabled(true)
-                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) setAutoEnterEnabled(true)
+
             }.build()
         )
     }
@@ -257,23 +241,27 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         isInPictureInPictureMode: Boolean,
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
-        if (isInPictureInPictureMode) binding.exoplayerView.hideController()
-        else binding.exoplayerView.showController()
+        if (isInPictureInPictureMode) {
+            binding.exoplayerView.hideController()
+            customControlsBinding.ivPlaybackSpeed.gone()
+        } else {
+            binding.exoplayerView.showController()
+            customControlsBinding.ivPlaybackSpeed.show()
+        }
     }
 
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     private fun prepareExoplayer() {
         if (position == 0) customControlsBinding.ivPrevious.isEnabled = false
-        else if (position == ControllerActivity.videoList.size - 1)
-            customControlsBinding.ivNext.isEnabled = false
+        else if (position == ControllerActivity.videoList.size - 1) customControlsBinding.ivNext.isEnabled =
+            false
 
         binding.apply {
             val uri = Uri.parse(ControllerActivity.videoList[position].path)
 
-            exoplayer = ExoPlayer.Builder(requireContext())
-                .setSeekBackIncrementMs(Constants.SKIP_DURATION)
-                .setSeekForwardIncrementMs(Constants.SKIP_DURATION)
-                .build()
+            exoplayer =
+                ExoPlayer.Builder(requireContext()).setSeekBackIncrementMs(Constants.SKIP_DURATION)
+                    .setSeekForwardIncrementMs(Constants.SKIP_DURATION).build()
             exoplayer.clearMediaItems()
 
             repeat(ControllerActivity.videoList.size) {
@@ -284,17 +272,11 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
             }
 
             concatenatingMediaSource =
-                ConcatenatingMediaSource2.Builder()
-                    .useDefaultMediaSourceFactory(requireContext())
-                    .add(mediaSource, 0)
-                    .add(MediaItem.fromUri(uri.toString()), 0)
-                    .build()
+                ConcatenatingMediaSource2.Builder().useDefaultMediaSourceFactory(requireContext())
+                    .add(mediaSource, 0).add(MediaItem.fromUri(uri.toString()), 0).build()
             exoplayerView.apply {
                 player = exoplayer
                 keepScreenOn = true
-                setControllerVisibilityListener(ControllerVisibilityListener {
-                    if (isInPictureInPictureMode) hideController()
-                })
             }
             exoplayer.apply {
                 setMediaSource(concatenatingMediaSource)
@@ -305,9 +287,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
                 play()
             }
 
-            mediaSession = MediaSession.Builder(requireContext(), exoplayer)
-                .setId(UUID.randomUUID().toString()).build()
-
             playerListeners()
         }
     }
@@ -315,6 +294,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     private fun playNext() {
         customControlsBinding.apply {
             try {
+                if (isLink) finish()
                 position++
                 if (!ivPrevious.isEnabled) ivPrevious.isEnabled = true
                 if (position < ControllerActivity.videoList.size) {
@@ -337,7 +317,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
             override fun onPlayerError(error: PlaybackException) {
                 error.printStackTrace()
                 exoplayer.stop()
-                mediaSession.release()
                 exoplayer.release()
                 finish()
                 "Unable to play video".toToast(requireContext())
@@ -364,8 +343,9 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
                 "onIsPlayingChanged: isPlaying $isPlaying".prettyPrint()
-                if (!isInPictureInPictureMode && isPlaying)
-                    customControlsBinding.ivPlay.setImageResource(R.drawable.ic_pause)
+                if (!isInPictureInPictureMode && isPlaying) customControlsBinding.ivPlay.setImageResource(
+                    R.drawable.ic_pause
+                )
             }
         })
     }
@@ -373,20 +353,37 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
 
     override fun onPause() {
         super.onPause()
-        if (!isInPictureInPictureMode)
-            exoplayer.apply {
-                playWhenReady = false
-                playbackState
-            }
+        if (exoplayer.isPlaying) {
+            if (!isInPictureInPictureMode)
+                exoplayer.apply {
+                    playWhenReady = true
+                    playbackState
+                }
+            else
+                exoplayer.apply {
+                    playWhenReady = false
+                    playbackState
+                }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        if (!isInPictureInPictureMode)
-            exoplayer.apply {
-                playWhenReady = true
-                playbackState
+
+            if (!isInPictureInPictureMode){
+                if (!exoplayer.isPlaying) {
+                    exoplayer.apply {
+                        playWhenReady = false
+                        playbackState
+                    }
+                }
             }
+            else
+                exoplayer.apply {
+                    playWhenReady = true
+                    playbackState
+                }
+
     }
 
     override fun onStart() {
@@ -395,15 +392,19 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         else prepareExoPlayerForLink()
     }
 
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     private fun prepareExoPlayerForLink() {
         exoplayer = ExoPlayer.Builder(requireContext()).build()
         binding.exoplayerView.player = exoplayer
         val mediaItem = MediaItem.fromUri(uri)
         exoplayer.apply {
             addMediaItem(mediaItem)
+            seekTo(0, C.TIME_UNSET)
+            videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
             prepare()
             playWhenReady = true
         }
+        playerListeners()
     }
 
 }

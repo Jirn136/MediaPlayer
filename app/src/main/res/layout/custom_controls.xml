@@ -29,7 +29,7 @@
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/txt_title"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="2"
@@ -37,6 +37,7 @@
                 android:textSize="18sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toRightOf="@id/iv_back"
+                app:layout_constraintRight_toLeftOf="@id/iv_pip"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="This is the title of the video" />
 
@@ -56,12 +57,22 @@
             android:id="@+id/iv_playback_speed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
             android:contentDescription="@string/playback_speed"
             android:src="@drawable/ic_1x"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tool_bar"
+            app:layout_constraintTop_toBottomOf="@id/tool_bar" />
+
+        <ImageView
+            android:id="@+id/iv_rotation"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginStart="10dp"
             android:layout_marginTop="5dp"
-            android:layout_marginStart="10dp"/>
+            android:contentDescription="@string/rotation"
+            android:src="@drawable/ic_rotation"
+            app:layout_constraintStart_toEndOf="@id/iv_playback_speed"
+            app:layout_constraintTop_toBottomOf="@id/tool_bar" />
 
 
         <androidx.constraintlayout.widget.ConstraintLayout

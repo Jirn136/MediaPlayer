@@ -24,4 +24,5 @@
     <string name="exit_pip">Exit PIP</string>
     <string name="paste_or_enter_link_here">Paste or enter link here</string>
     <string name="islink">isLink</string>
+    <string name="rotation">rotation</string>
 </resources>

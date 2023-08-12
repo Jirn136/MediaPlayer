@@ -34,6 +34,7 @@ import com.example.musicplayer.utils.goneViews
 import com.example.musicplayer.utils.hide
 import com.example.musicplayer.utils.prettyPrint
 import com.example.musicplayer.utils.show
+import com.example.musicplayer.utils.showViews
 import com.example.musicplayer.utils.toToast
 import java.io.File
 
@@ -55,10 +56,11 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     private var position = 0
     private var isLink = false
 
-    private val onBackPressedDispatcher by lazy { requireActivity().onBackPressedDispatcher }
-    private val isInPictureInPictureMode by lazy { requireActivity().isInPictureInPictureMode }
+    private val mActivity by lazy { activity as ControllerActivity }
+    private val onBackPressedDispatcher by lazy { mActivity.onBackPressedDispatcher }
     private val playerArgs: PlayerFragmentArgs by navArgs()
-
+    private var isInLandscape = false
+    private var haveEnteredPip = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -71,6 +73,37 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         }
         setupOnBackPressed()
         handleControls()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!isLink) prepareExoplayer()
+        else prepareExoPlayerForLink()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        exoplayer.apply {
+            playWhenReady = true
+            playbackState
+        }
+
+    }
+
+    override fun onPause() {
+        super.onPause()
+        val isInPIP = mActivity.isInPictureInPictureMode
+        "isInPIP: $isInPIP".prettyPrint()
+        if (!isInPIP && exoplayer.isPlaying)
+            exoplayer.apply {
+                playWhenReady = false
+                playbackState
+            }
+    }
+
+    override fun onDestroy() {
+        if (haveEnteredPip) mActivity.recreateActivity()
+        super.onDestroy()
     }
 
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
@@ -142,6 +175,22 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
             ivPlaybackSpeed.setOnClickListener {
                 updatePlaybackSpeed()
             }
+
+            ivRotation.setOnClickListener {
+                rotateScreen()
+            }
+        }
+    }
+
+    private fun rotateScreen() {
+        mActivity.apply {
+            isInLandscape = if (isInLandscape) {
+                setScreenPortrait()
+                false
+            } else {
+                setScreenLandscape()
+                true
+            }
         }
     }
 
@@ -205,7 +254,10 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         }
     }
 
-    private fun finish() = findNavController().popBackStack()
+    private fun finish() {
+        mActivity.setScreenPortrait()
+        findNavController().popBackStack()
+    }
 
     private fun retrieveWidthAndHeightAttributes(): Pair<Int, Int> {
         return if (!isLink) {
@@ -221,17 +273,14 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     }
 
     private fun enterPIPMode() {
-        val aspectRatio = Rational(
-            retrieveWidthAndHeightAttributes().first, retrieveWidthAndHeightAttributes().second
-        )
         val visibleRect = Rect()
         binding.exoplayerView.getGlobalVisibleRect(visibleRect)
-        requireActivity().enterPictureInPictureMode(
+        mActivity.enterPictureInPictureMode(
             PictureInPictureParams.Builder().apply {
-                setAspectRatio(aspectRatio)
+                if (aspectRatioInFloat() > 1) setAspectRatio(Rational(16, 9))
+                else setAspectRatio(Rational(9, 16))
                 setSourceRectHint(visibleRect)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) setAutoEnterEnabled(true)
-
             }.build()
         )
     }
@@ -241,12 +290,25 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         isInPictureInPictureMode: Boolean,
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        haveEnteredPip = isInPictureInPictureMode
         if (isInPictureInPictureMode) {
             binding.exoplayerView.hideController()
-            customControlsBinding.ivPlaybackSpeed.gone()
+            customControlsBinding.apply {
+                goneViews(ivPlaybackSpeed, ivRotation)
+            }
+            exoplayer.apply {
+                if (isPlaying) {
+                    playWhenReady = true
+                    playbackState
+                }
+            }
         } else {
-            binding.exoplayerView.showController()
-            customControlsBinding.ivPlaybackSpeed.show()
+            if (exoplayer.isPlaying) {
+                binding.exoplayerView.showController()
+                customControlsBinding.apply {
+                    showViews(ivPlaybackSpeed, ivRotation)
+                }
+            }
         }
     }
 
@@ -258,6 +320,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
 
         binding.apply {
             val uri = Uri.parse(ControllerActivity.videoList[position].path)
+            this@PlayerFragment.uri = uri
 
             exoplayer =
                 ExoPlayer.Builder(requireContext()).setSeekBackIncrementMs(Constants.SKIP_DURATION)
@@ -275,6 +338,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
                 ConcatenatingMediaSource2.Builder().useDefaultMediaSourceFactory(requireContext())
                     .add(mediaSource, 0).add(MediaItem.fromUri(uri.toString()), 0).build()
             exoplayerView.apply {
+                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                 player = exoplayer
                 keepScreenOn = true
             }
@@ -284,7 +348,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
                 prepare()
                 seekTo(0, C.TIME_UNSET)
                 videoScalingMode = C.VIDEO_SCALING_MODE_DEFAULT
-                play()
+                playWhenReady = true
             }
 
             playerListeners()
@@ -325,7 +389,19 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 super.onPlaybackStateChanged(playbackState)
                 when (playbackState) {
-                    Player.STATE_READY -> "onPlayWhenReadyChanged1: READY playWhenReady ".prettyPrint()
+                    Player.STATE_READY -> {
+                        "onPlayWhenReadyChanged1: READY playWhenReady ".prettyPrint()
+                        "aspectRatio:: ${aspectRatioInFloat()}".prettyPrint()
+                        isInLandscape = if (aspectRatioInFloat() > 1) {
+                            mActivity.setScreenLandscape()
+                            true
+                        } else {
+                            mActivity.setScreenPortrait()
+                            false
+                        }
+                        exoplayer.play()
+                    }
+
                     Player.STATE_BUFFERING -> "onPlayWhenReadyChanged1: BUFFERING".prettyPrint()
                     Player.STATE_IDLE -> "onPlayWhenReadyChanged1: IDLE".prettyPrint()
                     Player.STATE_ENDED -> {
@@ -343,54 +419,16 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
                 "onIsPlayingChanged: isPlaying $isPlaying".prettyPrint()
-                if (!isInPictureInPictureMode && isPlaying) customControlsBinding.ivPlay.setImageResource(
+                if (isPlaying) customControlsBinding.ivPlay.setImageResource(
                     R.drawable.ic_pause
                 )
             }
         })
     }
 
+    private fun aspectRatioInFloat(): Float =
+        retrieveWidthAndHeightAttributes().first.toFloat() / retrieveWidthAndHeightAttributes().second
 
-    override fun onPause() {
-        super.onPause()
-        if (exoplayer.isPlaying) {
-            if (!isInPictureInPictureMode)
-                exoplayer.apply {
-                    playWhenReady = true
-                    playbackState
-                }
-            else
-                exoplayer.apply {
-                    playWhenReady = false
-                    playbackState
-                }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-            if (!isInPictureInPictureMode){
-                if (!exoplayer.isPlaying) {
-                    exoplayer.apply {
-                        playWhenReady = false
-                        playbackState
-                    }
-                }
-            }
-            else
-                exoplayer.apply {
-                    playWhenReady = true
-                    playbackState
-                }
-
-    }
-
-    override fun onStart() {
-        super.onStart()
-        if (!isLink) prepareExoplayer()
-        else prepareExoPlayerForLink()
-    }
 
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     private fun prepareExoPlayerForLink() {

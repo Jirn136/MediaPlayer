@@ -57,6 +57,18 @@ fun Activity.setFullScreen() {
     }
 }
 
+@Suppress("DEPRECATION")
+fun Activity.clearFullScreen() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        window.insetsController?.apply {
+            show(
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            )
+        }
+    }
+}
+
 fun Any.prettyPrint(tag: String = "kanaku") {
     this.let {
         Log.d(tag, Gson().toJson(it))

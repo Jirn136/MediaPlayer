@@ -2,8 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -13,7 +12,6 @@
         tools:ignore="ScopedStorage" />
 
     <application
-        android:usesCleartextTraffic="true"
         android:name=".init.MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -24,7 +22,19 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicPlayer"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
+        <activity
+            android:name=".compose.ComposeControllerActivity"
+            android:exported="true"
+            android:label="@string/title_activity_compose_controller"
+            android:theme="@style/Theme.MusicPlayer" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".activities.ControllerActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
@@ -34,11 +44,6 @@
             android:supportsPictureInPicture="true"
             android:theme="@style/Theme.MusicPlayer"
             tools:ignore="NonResizeableActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 

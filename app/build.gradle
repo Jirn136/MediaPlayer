@@ -47,7 +47,8 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.4.5'
+        kotlinCompilerExtensionVersion '1.5.0'
+        kotlinCompilerVersion '1.5.21'
     }
     packagingOptions {
         resources {
@@ -99,7 +100,7 @@ dependencies {
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
 
-    def hilt_version = "2.44.2"
+    def hilt_version = "2.47"
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
 

@@ -78,7 +78,7 @@ fun VideoListScreen(
                 ),
                 actions = {
                     Icon(
-                        painter = painterResource(id = if(listOrGrid.value) R.drawable.ic_list else R.drawable.ic_grid),
+                        painter = painterResource(id = if (listOrGrid.value) R.drawable.ic_list else R.drawable.ic_grid),
                         contentDescription = "delete",
                         modifier = Modifier.clickable {
                             listOrGrid.value = !listOrGrid.value

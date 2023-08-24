@@ -13,15 +13,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumedWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalMinimumTouchTargetEnforcement
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -29,9 +37,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
+import androidx.compose.ui.Alignment.Companion.TopEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -52,6 +63,7 @@ import com.example.musicplayer.videoList.viewmodel.StorageViewModel
 @Composable
 fun VideoListScreen(
     deleteList: SnapshotStateList<Uri>,
+    listOrGrid: MutableState<Boolean>,
     deleteEnabled: MutableState<Boolean>,
     storageModel: StorageViewModel
 ) {
@@ -65,6 +77,14 @@ fun VideoListScreen(
                     )
                 ),
                 actions = {
+                    Icon(
+                        painter = painterResource(id = if(listOrGrid.value) R.drawable.ic_list else R.drawable.ic_grid),
+                        contentDescription = "delete",
+                        modifier = Modifier.clickable {
+                            listOrGrid.value = !listOrGrid.value
+                        }
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
                     if (deleteEnabled.value) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_delete),
@@ -88,6 +108,7 @@ fun VideoListScreen(
         ) {
             VideoList(
                 deleteList = deleteList,
+                listOrGrid = listOrGrid,
                 deleteEnabled = deleteEnabled,
                 storageModel = storageModel
             )
@@ -98,11 +119,13 @@ fun VideoListScreen(
 @Composable
 private fun VideoList(
     deleteList: SnapshotStateList<Uri>,
+    listOrGrid: MutableState<Boolean>,
     deleteEnabled: MutableState<Boolean>,
     storageModel: StorageViewModel
 ) {
     InitRecyclerView(
         deleteList = deleteList,
+        listOrGrid = listOrGrid,
         deleteEnabled = deleteEnabled,
         storageModel = storageModel
     )
@@ -111,21 +134,123 @@ private fun VideoList(
 @Composable
 fun InitRecyclerView(
     deleteList: SnapshotStateList<Uri>,
+    listOrGrid: MutableState<Boolean>,
     deleteEnabled: MutableState<Boolean>,
     storageModel: StorageViewModel
 ) {
     val details = storageModel.videoDetailsState.value
 
     details.let { detailList ->
-        LazyColumn(content = {
-            items(detailList.size) {
-                VideoItem(
-                    deleteList = deleteList,
-                    deleteEnabled = deleteEnabled,
-                    videoDetails = details[it]
-                )
+        if (listOrGrid.value) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(count = 2),
+            )
+            {
+                items(details.size) {
+                    GridVideoItem(
+                        deleteList = deleteList,
+                        deleteEnabled = deleteEnabled,
+                        videoDetails = details[it]
+                    )
+                }
             }
-        })
+        } else {
+            LazyColumn(content = {
+                items(detailList.size) {
+                    VideoItem(
+                        deleteList = deleteList,
+                        deleteEnabled = deleteEnabled,
+                        videoDetails = details[it]
+                    )
+                }
+            })
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun GridVideoItem(
+    deleteList: SnapshotStateList<Uri>,
+    deleteEnabled: MutableState<Boolean>,
+    videoDetails: VideoDetails =
+        VideoDetails(
+            "hello",
+            "hello",
+            null,
+            Uri.parse("hello"),
+            "1234"
+        )
+) {
+    val context = LocalContext.current
+
+    videoDetails.apply {
+        Card(
+            shape = RoundedCornerShape(4.dp),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 10.dp
+            ),
+            modifier = Modifier
+                .width(100.dp)
+                .wrapContentHeight()
+                .padding(5.dp)
+                .combinedClickable(
+                    onLongClick = {
+                        deleteEnabled.value = true
+                        deleteList.add(uri)
+                    },
+                    enabled = true,
+                ) {
+                    if (deleteEnabled.value)
+                        addOrRemoveFromList(deleteList, uri)
+                    "$title".toToast(context)
+                }
+        ) {
+            Spacer(modifier = Modifier.height(5.dp))
+            Box(modifier = Modifier.fillMaxWidth()) {
+                image?.let {
+                    Image(
+                        bitmap = it.asImageBitmap(),
+                        contentDescription = "title",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .size(50.dp)
+                            .align(alignment = Center)
+                    )
+                }
+                CompositionLocalProvider(LocalMinimumTouchTargetEnforcement provides false) {
+                    val isSelected = deleteList.contains(uri)
+
+                    if (deleteEnabled.value) {
+                        Checkbox(
+                            checked = isSelected,
+                            onCheckedChange = {
+                                addOrRemoveFromList(deleteList, uri)
+                            },
+                            modifier = Modifier.align(TopEnd)
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = title,
+                maxLines = 1,
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = getFormattedDurationTime(duration.toLong()).ifEmpty { "00:00" },
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(5.dp))
+        }
     }
 }
 

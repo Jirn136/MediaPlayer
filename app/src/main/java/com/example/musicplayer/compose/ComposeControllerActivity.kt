@@ -28,6 +28,9 @@ class ComposeControllerActivity : ComponentActivity() {
             val deleteEnabled = remember {
                 mutableStateOf(false)
             }
+            val listOrGrid = remember {
+                mutableStateOf(false)
+            }
             if (deleteList.isEmpty())
                 deleteEnabled.value = false
 
@@ -37,7 +40,12 @@ class ComposeControllerActivity : ComponentActivity() {
             }
             MediaPlayerTheme {
                 // A surface container using the 'background' color from the theme
-                VideoListScreen(deleteList, deleteEnabled, storageModel)
+                VideoListScreen(
+                    deleteList = deleteList,
+                    listOrGrid = listOrGrid,
+                    deleteEnabled = deleteEnabled,
+                    storageModel = storageModel
+                )
             }
         }
     }

@@ -86,6 +86,7 @@ fun VideoListScreen(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     if (deleteEnabled.value) {
+                        Spacer(modifier = Modifier.width(5.dp))
                         Icon(
                             painter = painterResource(id = R.drawable.ic_delete),
                             contentDescription = "delete",

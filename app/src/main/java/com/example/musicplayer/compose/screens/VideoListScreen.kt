@@ -265,9 +265,14 @@ fun VideoItem(
     val context = LocalContext.current
 
     videoDetails.apply {
-        Column(
+        Card(
+            shape = RoundedCornerShape(4.dp),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 10.dp
+            ),
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .padding(5.dp)
                 .combinedClickable(
                     onLongClick = {
                         deleteEnabled.value = true
@@ -325,11 +330,6 @@ fun VideoItem(
                     )
                 }
             }
-            Divider(
-                thickness = 1.dp,
-                color = Color.Black,
-                modifier = Modifier.padding(start = 10.dp, end = 10.dp)
-            )
         }
     }
 }

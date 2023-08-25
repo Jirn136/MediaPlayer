@@ -150,8 +150,11 @@ fun InitRecyclerView(
                 items(details.size) {
                     GridVideoItem(
                         deleteList = deleteList,
-                        deleteEnabled = deleteEnabled,
-                        videoDetails = details[it]
+                        deleteEnabled = deleteEnabled.value,
+                        videoDetails = details[it],
+                        onDeleteStateChange = { deleteState ->
+                            deleteEnabled.value = deleteState
+                        }
                     )
                 }
             }
@@ -160,8 +163,11 @@ fun InitRecyclerView(
                 items(detailList.size) {
                     VideoItem(
                         deleteList = deleteList,
-                        deleteEnabled = deleteEnabled,
-                        videoDetails = details[it]
+                        deleteEnabled = deleteEnabled.value,
+                        videoDetails = details[it],
+                        onDeleteStateChange = { deleteState ->
+                            deleteEnabled.value = deleteState
+                        }
                     )
                 }
             })
@@ -173,15 +179,9 @@ fun InitRecyclerView(
 @Composable
 fun GridVideoItem(
     deleteList: SnapshotStateList<Uri>,
-    deleteEnabled: MutableState<Boolean>,
-    videoDetails: VideoDetails =
-        VideoDetails(
-            "hello",
-            "hello",
-            null,
-            Uri.parse("hello"),
-            "1234"
-        )
+    deleteEnabled: Boolean,
+    videoDetails: VideoDetails,
+    onDeleteStateChange: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -197,12 +197,12 @@ fun GridVideoItem(
                 .padding(5.dp)
                 .combinedClickable(
                     onLongClick = {
-                        deleteEnabled.value = true
+                        onDeleteStateChange(true)
                         deleteList.add(uri)
                     },
                     enabled = true,
                 ) {
-                    if (deleteEnabled.value)
+                    if (deleteEnabled)
                         addOrRemoveFromList(deleteList, uri)
                     "$title".toToast(context)
                 }
@@ -223,7 +223,7 @@ fun GridVideoItem(
                 CompositionLocalProvider(LocalMinimumTouchTargetEnforcement provides false) {
                     val isSelected = deleteList.contains(uri)
 
-                    if (deleteEnabled.value) {
+                    if (deleteEnabled) {
                         Checkbox(
                             checked = isSelected,
                             onCheckedChange = {
@@ -259,8 +259,9 @@ fun GridVideoItem(
 @Composable
 fun VideoItem(
     deleteList: SnapshotStateList<Uri>,
-    deleteEnabled: MutableState<Boolean>,
-    videoDetails: VideoDetails
+    deleteEnabled: Boolean,
+    videoDetails: VideoDetails,
+    onDeleteStateChange :(Boolean) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -275,12 +276,12 @@ fun VideoItem(
                 .padding(5.dp)
                 .combinedClickable(
                     onLongClick = {
-                        deleteEnabled.value = true
+                        onDeleteStateChange(true)
                         deleteList.add(uri)
                     },
                     enabled = true,
                 ) {
-                    if (deleteEnabled.value)
+                    if (deleteEnabled)
                         addOrRemoveFromList(deleteList, uri)
                     "$title".toToast(context)
                 }
@@ -292,7 +293,7 @@ fun VideoItem(
             ) {
                 val isSelected = deleteList.contains(uri)
 
-                if (deleteEnabled.value) {
+                if (deleteEnabled) {
                     Checkbox(
                         checked = isSelected,
                         onCheckedChange = {
